@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thamiz's Architecture</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="My System">
+<meta name="theme-color" content="#080808">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23080808'/%3E%3Ctext y='72' x='50' text-anchor='middle' font-size='60' font-family='monospace' fill='%23c8f135'%3E⚡%3C/text%3E%3C/svg%3E">
+<script>
+  if ('serviceWorker' in navigator) {
+    const sw = `
+      self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+      self.addEventListener('install', e => e.waitUntil(caches.open('v1').then(c => c.addAll([location.pathname]))));
+    `;
+    const blob = new Blob([sw], {type: 'application/javascript'});
+    navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+  }
+  const manifest = {
+    name: "Thamiz's System",
+    short_name: "My System",
+    start_url: ".",
+    display: "standalone",
+    background_color: "#080808",
+    theme_color: "#080808",
+    icons: [{
+      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23080808'/%3E%3Ctext y='72' x='50' text-anchor='middle' font-size='60' font-family='monospace' fill='%23c8f135'%3E⚡%3C/text%3E%3C/svg%3E",
+      sizes: "192x192", type: "image/svg+xml"
+    }]
+  };
+  const mBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+  const mLink = document.createElement('link');
+  mLink.rel = 'manifest';
+  mLink.href = URL.createObjectURL(mBlob);
+  document.currentScript.after(mLink);
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Epilogue:wght@300;400;500;600;700;900&display=swap');
+
+  :root {
+    --bg: #080808;
+    --surface: #111;
+    --surface2: #161616;
+    --border: #1e1e1e;
+    --accent: #c8f135;
+    --pink: #ff4dff;
+    --blue: #4da6ff;
+    --orange: #ff9a3c;
+    --red: #ff4d4d;
+    --teal: #3cffc8;
+    --muted: #444;
+    --muted2: #2a2a2a;
+    --text: #f0f0f0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Epilogue', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 32px 16px 80px; }
+
+  /* HEADER */
+  .hero {
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-tag {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hero-tag::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 12vw, 88px);
+    line-height: 0.9;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+
+  h1 .accent { color: var(--accent); }
+  h1 .dim { color: var(--muted); }
+
+  .hero-sub {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 480px;
+  }
+
+  .hero-sub strong { color: var(--accent); font-weight: 600; }
+
+  /* PHASE TOGGLE */
+  .phase-toggle {
+    display: flex;
+    gap: 0;
+    margin-bottom: 32px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .phase-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+
+  .phase-btn:last-child { border-right: none; }
+
+  .phase-btn.active {
+    background: var(--accent);
+    color: #000;
+  }
+
+  .phase-btn .phase-date {
+    display: block;
+    font-family: 'Epilogue', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+    opacity: 0.7;
+  }
+
+  /* DAY TABS */
+  .day-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .day-tab {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Epilogue', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .day-tab:hover { border-color: var(--accent); color: var(--text); }
+  .day-tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  .day-tab.special { border-color: var(--pink); color: var(--pink); }
+  .day-tab.special.active { background: var(--pink); color: #000; }
+
+  /* SCHEDULE */
+  .schedule { position: relative; }
+
+  .schedule::before {
+    content: '';
+    position: absolute;
+    left: 72px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .block {
+    display: flex;
+    gap: 0;
+    margin-bottom: 4px;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .block-time {
+    width: 72px;
+    flex-shrink: 0;
+    padding: 14px 16px 14px 0;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    text-align: right;
+    line-height: 1.3;
+    padding-top: 16px;
+  }
+
+  .block-dot {
+    width: 20px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted2);
+    border: 1px solid var(--muted);
+    flex-shrink: 0;
+  }
+
+  .block-content {
+    flex: 1;
+    margin-left: 16px;
+    padding: 12px 16px;
+    border-left: 2px solid transparent;
+    background: var(--surface);
+    transition: border-color 0.2s;
+  }
+
+  .block-content:hover { background: var(--surface2); }
+
+  .block-label {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 3px;
+    line-height: 1.3;
+  }
+
+  .block-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .block-tag {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+
+  /* CATEGORY COLORS */
+  .cat-wake .dot { background: var(--accent); border-color: var(--accent); }
+  .cat-wake .block-content { border-left-color: var(--accent); }
+  .cat-wake .block-label { color: var(--accent); }
+  .cat-wake .block-tag { background: var(--accent)22; color: var(--accent); }
+
+  .cat-morning .dot { background: #ffd93d; border-color: #ffd93d; }
+  .cat-morning .block-content { border-left-color: #ffd93d; }
+  .cat-morning .block-tag { background: #ffd93d22; color: #ffd93d; }
+
+  .cat-college .dot { background: var(--blue); border-color: var(--blue); }
+  .cat-college .block-content { border-left-color: var(--blue); }
+  .cat-college .block-tag { background: var(--blue)22; color: var(--blue); }
+
+  .cat-internship .dot { background: #a78bfa; border-color: #a78bfa; }
+  .cat-internship .block-content { border-left-color: #a78bfa; }
+  .cat-internship .block-tag { background: #a78bfa22; color: #a78bfa; }
+
+  .cat-zynthverse .dot { background: var(--pink); border-color: var(--pink); }
+  .cat-zynthverse .block-content { border-left-color: var(--pink); }
+  .cat-zynthverse .block-label { color: var(--pink); }
+  .cat-zynthverse .block-tag { background: var(--pink)22; color: var(--pink); }
+
+  .cat-dance .dot { background: var(--orange); border-color: var(--orange); }
+  .cat-dance .block-content { border-left-color: var(--orange); }
+  .cat-dance .block-tag { background: var(--orange)22; color: var(--orange); }
+
+  .cat-personal .dot { background: var(--teal); border-color: var(--teal); }
+  .cat-personal .block-content { border-left-color: var(--teal); }
+  .cat-personal .block-tag { background: var(--teal)22; color: var(--teal); }
+
+  .cat-gym .dot { background: var(--red); border-color: var(--red); }
+  .cat-gym .block-content { border-left-color: var(--red); }
+  .cat-gym .block-tag { background: var(--red)22; color: var(--red); }
+
+  .cat-sleep .dot { background: var(--muted); border-color: var(--muted); }
+  .cat-sleep .block-content { border-left-color: var(--muted); }
+  .cat-sleep .block-tag { background: #ffffff11; color: var(--muted); }
+
+  .cat-rest .dot { background: var(--muted2); border-color: var(--muted); }
+  .cat-rest .block-content { border-left-color: var(--muted2); background: transparent; }
+  .cat-rest .block-label { color: var(--muted); font-weight: 400; font-style: italic; }
+
+  /* RULES SECTION */
+  .rules {
+    margin-top: 40px;
+    border-top: 1px solid var(--border);
+    padding-top: 32px;
+  }
+
+  .rules-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    color: var(--accent);
+  }
+
+  .rule-item {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rule-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--muted2);
+    width: 32px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .rule-text { font-size: 13px; line-height: 1.6; color: var(--text); }
+  .rule-text strong { color: var(--accent); }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .phase-panel { display: none; }
+  .phase-panel.active { display: block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-tag">Daily Architecture</div>
+    <h1>THAMIZ'S<br><span class="accent">SYSTEM</span><br><span class="dim">2025</span></h1>
+    <p class="hero-sub">This isn't a schedule. It's a <strong>factory reset.</strong> Two phases — now, and the upgraded version from April 1st. Follow the structure and the version of you that finishes what he starts shows up automatically.</p>
+  </div>
+
+  <div class="phase-toggle">
+    <button class="phase-btn active" onclick="switchPhase(0)">
+      PHASE 1
+      <span class="phase-date">Now → March 31</span>
+    </button>
+    <button class="phase-btn" onclick="switchPhase(1)">
+      PHASE 2
+      <span class="phase-date">April 1 onwards</span>
+    </button>
+  </div>
+
+  <!-- PHASE 1 -->
+  <div class="phase-panel active" id="phase0">
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#c8f135"></div>Wake/Reset</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ffd93d"></div>Morning</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4da6ff"></div>College</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div>Internship</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff4dff"></div>Zynthverse</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff9a3c"></div>Dance</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3cffc8"></div>Personal</div>
+    </div>
+
+    <div class="day-tabs" id="tabs0">
+      <button class="day-tab active" onclick="switchDay(0,0)">MON</button>
+      <button class="day-tab" onclick="switchDay(0,1)">TUE</button>
+      <button class="day-tab" onclick="switchDay(0,2)">WED</button>
+      <button class="day-tab" onclick="switchDay(0,3)">THU</button>
+      <button class="day-tab" onclick="switchDay(0,4)">FRI</button>
+      <button class="day-tab special" onclick="switchDay(0,5)">SAT</button>
+      <button class="day-tab special" onclick="switchDay(0,6)">SUN</button>
+    </div>
+
+    <div id="schedule0"></div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div class="phase-panel" id="phase1">
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#c8f135"></div>Wake/Reset</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ffd93d"></div>Morning</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4da6ff"></div>College</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div>Internship</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff4dff"></div>Zynthverse</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff9a3c"></div>Dance</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3cffc8"></div>Personal</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff4d4d"></div>Gym</div>
+    </div>
+
+    <div class="day-tabs" id="tabs1">
+      <button class="day-tab active" onclick="switchDay(1,0)">MON</button>
+      <button class="day-tab" onclick="switchDay(1,1)">TUE</button>
+      <button class="day-tab" onclick="switchDay(1,2)">WED</button>
+      <button class="day-tab" onclick="switchDay(1,3)">THU</button>
+      <button class="day-tab" onclick="switchDay(1,4)">FRI</button>
+      <button class="day-tab special" onclick="switchDay(1,5)">SAT</button>
+      <button class="day-tab special" onclick="switchDay(1,6)">SUN</button>
+    </div>
+
+    <div id="schedule1"></div>
+  </div>
+
+  <div class="rules">
+    <div class="rules-title">THE NON-NEGOTIABLES</div>
+
+    <div class="rule-item">
+      <div class="rule-num">01</div>
+      <div class="rule-text"><strong>Phone out of bedroom at 12AM.</strong> Charge it outside. No exceptions. This kills the late night scroll and fixes your sleep architecture.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">02</div>
+      <div class="rule-text"><strong>Zynthverse is a client.</strong> The evening block is a shift. You show up like Graphitee is watching. One micro-task per session minimum.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">03</div>
+      <div class="rule-text"><strong>No Instagram on personal account on phone.</strong> iPad only for Zynthverse and content pages. The pipeline is broken. Keep it broken.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">04</div>
+      <div class="rule-text"><strong>Urge hits → 20 pushups immediately.</strong> Don't negotiate. Don't wait. Floor, now. Interrupt the pattern before it completes.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">05</div>
+      <div class="rule-text"><strong>German is 15 minutes only.</strong> Not a full lesson. Just Duolingo or one video. Consistency over intensity — you're building a habit not a degree right now.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">06</div>
+      <div class="rule-text"><strong>Sunday is sacred for Graphitee presentation prep.</strong> Do it in the morning — never leave it for Sunday night. Night is recovery.</div>
+    </div>
+    <div class="rule-item" style="border-bottom:none">
+      <div class="rule-num">07</div>
+      <div class="rule-text"><strong>You are allowed to feel tired.</strong> The schedule bends for life. But Zynthverse, sleep time, and no-Instagram are the three things that never bend.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const PHASE1 = {
+  // MON - college day, no meeting
+  0: [
+    { time: "5:00", label: "Wake Up", desc: "No phone for first 10 mins. Drink water. Wash face. Just exist.", cat: "cat-wake", tag: "Reset" },
+    { time: "5:10", label: "Morning Walk", desc: "5000 steps outside. No earphones for first 5 mins. Let your brain wake up naturally.", cat: "cat-morning", tag: "Body" },
+    { time: "6:00", label: "Get Ready + Breakfast", desc: "Real food. Even if it's just eggs and rice. Eat something before college.", cat: "cat-morning", tag: "Fuel" },
+    { time: "7:30", label: "Leave for College", desc: "Use commute for German audio or just decompress.", cat: "cat-college", tag: "Transit" },
+    { time: "8:00", label: "College", desc: "Classes until 3:15. Be present. Law finals are in July.", cat: "cat-college", tag: "College" },
+    { time: "3:45", label: "Home + Decompress", desc: "15 mins. Eat, rest, reset. You've been out since 7:30.", cat: "cat-rest", tag: "Rest" },
+    { time: "4:00", label: "Zynthverse Block", desc: "ONE micro task. Sleeve design, content planning, packaging — one thing only. 90 mins.", cat: "cat-zynthverse", tag: "⚡ Zynthverse" },
+    { time: "5:30", label: "Graphitee Design Block", desc: "2 designs for the day. Done before dinner.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "7:00", label: "Dinner + Break", desc: "Eat. Call your girlfriend. Breathe.", cat: "cat-personal", tag: "Personal" },
+    { time: "8:00", label: "Learning Block", desc: "German (15 mins) + reading (20 mins). No screen after this.", cat: "cat-personal", tag: "Growth" },
+    { time: "9:00", label: "Wind Down", desc: "Free time. No work after 9.", cat: "cat-rest", tag: "Rest" },
+    { time: "11:30", label: "Phone Out of Room", desc: "Charge it outside. In bed by 12. Non-negotiable.", cat: "cat-sleep", tag: "Sleep" },
+  ],
+  // TUE - college day, no Graphitee meeting
+  1: [
+    { time: "5:00", label: "Wake Up", desc: "Water. No phone. 10 minutes of just existing.", cat: "cat-wake", tag: "Reset" },
+    { time: "5:10", label: "Morning Walk", desc: "5000 steps. This is your thinking time — let ideas come.", cat: "cat-morning", tag: "Body" },
+    { time: "6:00", label: "Get Ready + Breakfast", desc: "Real meal. Non-negotiable fuel.", cat: "cat-morning", tag: "Fuel" },
+    { time: "7:30", label: "Leave for College", desc: "German audio on commute.", cat: "cat-college", tag: "Transit" },
+    { time: "8:00", label: "College", desc: "Full day. Be present.", cat: "cat-college", tag: "College" },
+    { time: "3:45", label: "Home + Decompress", desc: "15 mins. Eat. Rest.", cat: "cat-rest", tag: "Rest" },
+    { time: "4:00", label: "Zynthverse Block", desc: "Deep focus. Content creation, drop planning, or design work. 90 mins.", cat: "cat-zynthverse", tag: "⚡ Zynthverse" },
+    { time: "5:30", label: "Graphitee Design Block", desc: "2 designs. Done by dinner.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "7:00", label: "Dinner + Break", desc: "Rest. Connect with your girlfriend. Recharge.", cat: "cat-personal", tag: "Personal" },
+    { time: "8:00", label: "Learning Block", desc: "German (15 mins) + reading (20 mins). No screen after this.", cat: "cat-personal", tag: "Growth" },
+    { time: "9:00", label: "Wind Down", desc: "Free time. YouTube, music, call someone. No work after 9.", cat: "cat-rest", tag: "Rest" },
+    { time: "11:30", label: "Phone Out + Sleep", desc: "In bed by 12. Lights out.", cat: "cat-sleep", tag: "Sleep" },
+  ],
+  // WED - college + dance 6-7 + Graphitee meeting 8-10PM
+  2: [
+    { time: "5:00", label: "Wake Up", desc: "Water. No phone first 10 mins. Long day ahead — start calm.", cat: "cat-wake", tag: "Reset" },
+    { time: "5:10", label: "Morning Walk", desc: "5000 steps. You teach dance AND have a meeting tonight. Body needs to move now.", cat: "cat-morning", tag: "Body" },
+    { time: "6:00", label: "Get Ready + Breakfast", desc: "Fuel up properly — this is your heaviest day.", cat: "cat-morning", tag: "Fuel" },
+    { time: "7:30", label: "Leave for College", desc: "German audio commute.", cat: "cat-college", tag: "Transit" },
+    { time: "8:00", label: "College", desc: "Classes.", cat: "cat-college", tag: "College" },
+    { time: "3:45", label: "Home + Decompress", desc: "15 mins. Eat. This is important — long evening ahead.", cat: "cat-rest", tag: "Rest" },
+    { time: "4:00", label: "Graphitee Design Block", desc: "2 designs early — you won't have time later tonight.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "5:15", label: "Zynthverse — Quick Block", desc: "30-45 mins only. One micro task. Don't overload Wednesday.", cat: "cat-zynthverse", tag: "⚡ Zynthverse" },
+    { time: "6:00", label: "Dance Class — Nesan's Studio", desc: "You're the teacher. Be fully present here.", cat: "cat-dance", tag: "🕺 Dance" },
+    { time: "7:00", label: "Dinner", desc: "Eat properly before the meeting. Quick but real food.", cat: "cat-personal", tag: "Fuel" },
+    { time: "8:00", label: "Graphitee Meeting", desc: "Show up sharp. Wednesday meeting.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "10:00", label: "Wind Down Only", desc: "You've been on since 5AM. No more work. Just decompress.", cat: "cat-rest", tag: "Rest" },
+    { time: "11:30", label: "Phone Out + Sleep", desc: "In bed by 12. Wednesday is your hardest day — protect recovery.", cat: "cat-sleep", tag: "Sleep" },
+  ],
+  // THU - college + dance 6-7, no meeting
+  3: [
+    { time: "5:00", label: "Wake Up", desc: "Water. No phone.", cat: "cat-wake", tag: "Reset" },
+    { time: "5:10", label: "Morning Walk", desc: "5000 steps. Dance day — warm up early.", cat: "cat-morning", tag: "Body" },
+    { time: "6:00", label: "Get Ready + Breakfast", desc: "Real food.", cat: "cat-morning", tag: "Fuel" },
+    { time: "7:30", label: "Leave for College", desc: "German audio commute.", cat: "cat-college", tag: "Transit" },
+    { time: "8:00", label: "College", desc: "Full day.", cat: "cat-college", tag: "College" },
+    { time: "3:45", label: "Home + Decompress", desc: "15 mins rest before the evening.", cat: "cat-rest", tag: "Rest" },
+    { time: "4:00", label: "Zynthverse Block", desc: "60 mins focused. No meeting tonight so use this window properly.", cat: "cat-zynthverse", tag: "⚡ Zynthverse" },
+    { time: "5:00", label: "Graphitee Design Block", desc: "2 designs before dance.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "5:45", label: "Prep for Dance", desc: "Get ready. Head to studio.", cat: "cat-dance", tag: "Dance" },
+    { time: "6:00", label: "Dance Class — Nesan's Studio", desc: "Full presence. This is your creative outlet — enjoy it.", cat: "cat-dance", tag: "🕺 Dance" },
+    { time: "7:00", label: "Dinner + Recovery", desc: "Eat. Breathe. You've earned this.", cat: "cat-personal", tag: "Personal" },
+    { time: "8:00", label: "Learning Block", desc: "German + reading. 35 mins. No meeting tonight — use the peace.", cat: "cat-personal", tag: "Growth" },
+    { time: "9:00", label: "Wind Down", desc: "Free time. Rest earned.", cat: "cat-rest", tag: "Rest" },
+    { time: "11:30", label: "Phone Out + Sleep", desc: "12AM lights out.", cat: "cat-sleep", tag: "Sleep" },
+  ],
+  // FRI - college, no meeting, free evening
+  4: [
+    { time: "5:00", label: "Wake Up", desc: "Water. No phone. Last weekday push.", cat: "cat-wake", tag: "Reset" },
+    { time: "5:10", label: "Morning Walk", desc: "5000 steps. Friday energy.", cat: "cat-morning", tag: "Body" },
+    { time: "6:00", label: "Get Ready + Breakfast", desc: "Fuel up.", cat: "cat-morning", tag: "Fuel" },
+    { time: "7:30", label: "Leave for College", desc: "German audio commute.", cat: "cat-college", tag: "Transit" },
+    { time: "8:00", label: "College", desc: "End of the week. Stay sharp.", cat: "cat-college", tag: "College" },
+    { time: "3:45", label: "Home + Decompress", desc: "Longer rest today — 30 mins. You've earned it.", cat: "cat-rest", tag: "Rest" },
+    { time: "4:15", label: "Zynthverse Block — Weekly Review", desc: "What moved this week? What didn't? Set one goal for next week. 60 mins.", cat: "cat-zynthverse", tag: "⚡ Zynthverse" },
+    { time: "5:30", label: "Graphitee Design Block", desc: "2 designs to close the week.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "7:00", label: "Dinner + Free Evening", desc: "Friday is yours. Watch something, call your girlfriend, do nothing. Fully off.", cat: "cat-personal", tag: "Personal" },
+    { time: "11:30", label: "Phone Out + Sleep", desc: "Sleep well. Weekend ahead.", cat: "cat-sleep", tag: "Sleep" },
+  ],
+  // SAT - every 3rd Saturday is college, otherwise free
+  5: [
+    { time: "6:00", label: "Wake Up", desc: "Slightly later wake — body needs the extra hour.", cat: "cat-wake", tag: "Reset" },
+    { time: "6:15", label: "Morning Walk", desc: "5000 steps. No rush today.", cat: "cat-morning", tag: "Body" },
+    { time: "7:00", label: "Breakfast", desc: "Take your time. Real meal.", cat: "cat-morning", tag: "Fuel" },
+    { time: "8:00", label: "DEEP ZYNTHVERSE SESSION", desc: "This is your longest block all week. 2-3 hours. Production work, design, content — go deep.", cat: "cat-zynthverse", tag: "⚡ Zynthverse" },
+    { time: "11:00", label: "Break", desc: "Get up. Move. Eat something.", cat: "cat-rest", tag: "Rest" },
+    { time: "11:30", label: "Graphitee Designs", desc: "Weekend designs if behind, or get ahead for next week.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "1:00", label: "Lunch + Long Break", desc: "Proper rest. Afternoon is yours.", cat: "cat-personal", tag: "Personal" },
+    { time: "3:00", label: "Content Creation", desc: "Souleric / content page — film, edit, plan posts. 90 mins.", cat: "cat-zynthverse", tag: "Content" },
+    { time: "5:00", label: "Personal Time", desc: "Girlfriend, family, friends. Real life.", cat: "cat-personal", tag: "Personal" },
+    { time: "7:00", label: "Dinner", desc: "Eat before the meeting.", cat: "cat-personal", tag: "Fuel" },
+    { time: "8:00", label: "Graphitee Meeting", desc: "Saturday evening meeting. Show up sharp.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "10:00", label: "Wind Down", desc: "Meeting done. Decompress. Weekend night.", cat: "cat-rest", tag: "Rest" },
+    { time: "12:00", label: "Phone Out + Sleep", desc: "12AM max.", cat: "cat-sleep", tag: "Sleep" },
+  ],
+  // SUN - rest + Graphitee presentation prep
+  6: [
+    { time: "7:00", label: "Wake Up", desc: "No alarm if possible. Let the body wake naturally.", cat: "cat-wake", tag: "Reset" },
+    { time: "7:30", label: "Morning Walk", desc: "5000 steps. Slower pace. This is active recovery.", cat: "cat-morning", tag: "Body" },
+    { time: "8:30", label: "Graphitee Weekly Presentation Prep", desc: "Do this FIRST before anything else. Compile your week's work, article writeup, recording prep. 90 mins.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "10:00", label: "Record Presentation", desc: "Film the weekly workshop recording. Get it done and submitted.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "11:00", label: "Free Morning", desc: "You've already done the hard thing. Rest.", cat: "cat-rest", tag: "Rest" },
+    { time: "1:00", label: "Lunch", desc: "Proper meal.", cat: "cat-personal", tag: "Personal" },
+    { time: "2:00", label: "Zynthverse Planning Session", desc: "Not design work — planning only. Next week's tasks, drop progress tracker, what needs to move.", cat: "cat-zynthverse", tag: "⚡ Zynthverse" },
+    { time: "4:00", label: "Complete Rest", desc: "Sunday afternoon is sacred. No obligations. Recharge for the week.", cat: "cat-rest", tag: "Rest" },
+    { time: "7:00", label: "Dinner + Family Time", desc: "Be present at home.", cat: "cat-personal", tag: "Personal" },
+    { time: "9:00", label: "Week Prep", desc: "Look at tomorrow. Set your one Zynthverse micro-task for Monday. 15 mins only.", cat: "cat-personal", tag: "Prep" },
+    { time: "11:00", label: "Phone Out + Sleep", desc: "Early sleep Sunday = great Monday. Protect this.", cat: "cat-sleep", tag: "Sleep" },
+  ]
+};
+
+// Phase 2 - April 1 onwards (adds gym, diet cooking)
+const PHASE2 = {
+  0: [
+    { time: "5:00", label: "Wake Up + Cold Shower", desc: "Water. Cold shower 30 sec min. Dopamine spike to start the day.", cat: "cat-wake", tag: "Reset" },
+    { time: "5:15", label: "Morning Walk — 5000 Steps", desc: "First half of steps before the city wakes up.", cat: "cat-morning", tag: "Body" },
+    { time: "6:00", label: "Cook + Eat Breakfast", desc: "Diet meal. Takes 20 mins. Worth it.", cat: "cat-morning", tag: "Fuel" },
+    { time: "6:30", label: "Get Ready", desc: "Leave buffer time.", cat: "cat-morning", tag: "Prep" },
+    { time: "7:30", label: "Leave for College", desc: "German audio commute.", cat: "cat-college", tag: "Transit" },
+    { time: "8:00", label: "College", desc: "Full day. July finals — be present.", cat: "cat-college", tag: "College" },
+    { time: "3:45", label: "Home + Eat", desc: "Diet meal. 15 mins rest.", cat: "cat-rest", tag: "Rest" },
+    { time: "4:00", label: "GYM", desc: "45-60 mins. Foundation of everything.", cat: "cat-gym", tag: "💪 Gym" },
+    { time: "5:15", label: "Zynthverse Block", desc: "60-90 mins. One focused task. This is your empire.", cat: "cat-zynthverse", tag: "⚡ Zynthverse" },
+    { time: "6:45", label: "Graphitee Design Block", desc: "2 designs. Done before the meeting.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "7:45", label: "Dinner + Learning Block", desc: "Diet meal. German 15 mins + reading 20 mins.", cat: "cat-personal", tag: "Growth" },
+    { time: "9:00", label: "Wind Down", desc: "Free. No more work.", cat: "cat-rest", tag: "Rest" },
+    { time: "11:30", label: "Phone Out + Sleep", desc: "12AM lights out.", cat: "cat-sleep", tag: "Sleep" },
+  ],
+  1: [
+    { time: "5:00", label: "Wake Up + Cold Shower", desc: "30 sec cold. Dopamine. Go.", cat: "cat-wake", tag: "Reset" },
+    { time: "5:15", label: "Morning Walk — 5000 Steps", desc: "Steps before the city wakes up.", cat: "cat-morning", tag: "Body" },
+    { time: "6:00", label: "Cook + Eat Breakfast", desc: "Diet meal. Fuel.", cat: "cat-morning", tag: "Fuel" },
+    { time: "7:30", label: "Leave for College", desc: "German audio.", cat: "cat-college", tag: "Transit" },
+    { time: "8:00", label: "College", desc: "Full day.", cat: "cat-college", tag: "College" },
+    { time: "3:45", label: "Home + Eat", desc: "Diet meal. Rest.", cat: "cat-rest", tag: "Rest" },
+    { time: "4:00", label: "GYM", desc: "45-60 mins. Show up.", cat: "cat-gym", tag: "💪 Gym" },
+    { time: "5:15", label: "Zynthverse Block", desc: "90 mins deep work. No meeting tonight — use it fully.", cat: "cat-zynthverse", tag: "⚡ Zynthverse" },
+    { time: "6:45", label: "Graphitee Design Block", desc: "2 designs.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "8:00", label: "Dinner + Learning Block", desc: "Diet meal. German 15 mins + reading 20 mins.", cat: "cat-personal", tag: "Growth" },
+    { time: "9:00", label: "Wind Down", desc: "Free time. No work after 9.", cat: "cat-rest", tag: "Rest" },
+    { time: "11:30", label: "Phone Out + Sleep", desc: "12AM.", cat: "cat-sleep", tag: "Sleep" },
+  ],
+  2: [
+    { time: "5:00", label: "Wake Up + Cold Shower", desc: "Heaviest day of the week. Start strong.", cat: "cat-wake", tag: "Reset" },
+    { time: "5:15", label: "Morning Walk — 5000 Steps", desc: "Dance + meeting tonight. Body needs to move now.", cat: "cat-morning", tag: "Body" },
+    { time: "6:00", label: "Cook + Eat Breakfast", desc: "Fuel — very long day ahead.", cat: "cat-morning", tag: "Fuel" },
+    { time: "7:30", label: "Leave for College", desc: "German audio.", cat: "cat-college", tag: "Transit" },
+    { time: "8:00", label: "College", desc: "Classes.", cat: "cat-college", tag: "College" },
+    { time: "3:45", label: "Home + Eat", desc: "Diet meal. Short rest.", cat: "cat-rest", tag: "Rest" },
+    { time: "4:00", label: "GYM", desc: "45 mins max — dance at 6.", cat: "cat-gym", tag: "💪 Gym" },
+    { time: "5:00", label: "Graphitee Designs", desc: "2 designs now — no time tonight after meeting.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "5:45", label: "Prep for Dance", desc: "Get ready. Head to studio.", cat: "cat-dance", tag: "Dance" },
+    { time: "6:00", label: "Dance Class — Nesan's Studio", desc: "Full presence. This is your joy.", cat: "cat-dance", tag: "🕺 Dance" },
+    { time: "7:00", label: "Dinner", desc: "Diet meal. Eat before the meeting.", cat: "cat-personal", tag: "Fuel" },
+    { time: "8:00", label: "Graphitee Meeting", desc: "Wednesday meeting. Show up.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "10:00", label: "Wind Down Only", desc: "5AM to 10PM. You're done. Just decompress.", cat: "cat-rest", tag: "Rest" },
+    { time: "11:30", label: "Phone Out + Sleep", desc: "Protect recovery. Hardest day done.", cat: "cat-sleep", tag: "Sleep" },
+  ],
+  3: [
+    { time: "5:00", label: "Wake Up + Cold Shower", desc: "Second dance day. Keep the energy.", cat: "cat-wake", tag: "Reset" },
+    { time: "5:15", label: "Morning Walk — 5000 Steps", desc: "Steps before breakfast.", cat: "cat-morning", tag: "Body" },
+    { time: "6:00", label: "Cook + Eat Breakfast", desc: "Diet meal.", cat: "cat-morning", tag: "Fuel" },
+    { time: "7:30", label: "Leave for College", desc: "German audio.", cat: "cat-college", tag: "Transit" },
+    { time: "8:00", label: "College", desc: "Full day.", cat: "cat-college", tag: "College" },
+    { time: "3:45", label: "Home + Eat", desc: "Diet. Quick rest.", cat: "cat-rest", tag: "Rest" },
+    { time: "4:00", label: "GYM", desc: "45 mins. Done before dance.", cat: "cat-gym", tag: "💪 Gym" },
+    { time: "5:00", label: "Zynthverse Block", desc: "60 mins. No meeting tonight — use the peace.", cat: "cat-zynthverse", tag: "⚡ Zynthverse" },
+    { time: "6:00", label: "Dance Class — Nesan's Studio", desc: "Teach. Be present. Enjoy it.", cat: "cat-dance", tag: "🕺 Dance" },
+    { time: "7:00", label: "Dinner", desc: "Diet meal. Recovery.", cat: "cat-personal", tag: "Fuel" },
+    { time: "8:00", label: "Graphitee Designs + Learning", desc: "2 designs. Then German 15 mins + reading 20 mins.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "9:30", label: "Wind Down", desc: "Thursday free. Rest.", cat: "cat-rest", tag: "Rest" },
+    { time: "11:30", label: "Phone Out + Sleep", desc: "12AM.", cat: "cat-sleep", tag: "Sleep" },
+  ],
+  4: [
+    { time: "5:00", label: "Wake Up + Cold Shower", desc: "Last weekday. Finish strong.", cat: "cat-wake", tag: "Reset" },
+    { time: "5:15", label: "Morning Walk — 5000 Steps", desc: "Friday morning. Good energy.", cat: "cat-morning", tag: "Body" },
+    { time: "6:00", label: "Cook + Eat Breakfast", desc: "Diet. Fuel.", cat: "cat-morning", tag: "Fuel" },
+    { time: "7:30", label: "Leave for College", desc: "German audio.", cat: "cat-college", tag: "Transit" },
+    { time: "8:00", label: "College", desc: "Last day of the week.", cat: "cat-college", tag: "College" },
+    { time: "3:45", label: "Home + Eat", desc: "Diet. Recover.", cat: "cat-rest", tag: "Rest" },
+    { time: "4:00", label: "GYM", desc: "Friday pump. Earn the weekend.", cat: "cat-gym", tag: "💪 Gym" },
+    { time: "5:15", label: "Zynthverse Weekly Review", desc: "What moved? What didn't? Set next week's one goal. 60 mins.", cat: "cat-zynthverse", tag: "⚡ Zynthverse" },
+    { time: "6:30", label: "Graphitee Design Block", desc: "2 designs to close the week.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "7:30", label: "Dinner + Free Evening", desc: "Friday is yours. Fully off. No meeting tonight.", cat: "cat-personal", tag: "Personal" },
+    { time: "11:30", label: "Phone Out + Sleep", desc: "Sleep well. Weekend earned.", cat: "cat-sleep", tag: "Sleep" },
+  ],
+  5: [
+    { time: "6:00", label: "Wake Up + Cold Shower", desc: "Slightly later. Still cold shower.", cat: "cat-wake", tag: "Reset" },
+    { time: "6:15", label: "Morning Walk — 5000 Steps", desc: "Slower pace. Saturday energy.", cat: "cat-morning", tag: "Body" },
+    { time: "7:15", label: "Cook + Eat Breakfast", desc: "Take your time. Real meal.", cat: "cat-morning", tag: "Fuel" },
+    { time: "8:00", label: "DEEP ZYNTHVERSE SESSION", desc: "2-3 hours. Your longest creative block. Production, design, packaging, marketing — go deep.", cat: "cat-zynthverse", tag: "⚡ Zynthverse" },
+    { time: "11:00", label: "Break + Snack", desc: "Move. Eat. Reset.", cat: "cat-rest", tag: "Rest" },
+    { time: "11:30", label: "Content Creation", desc: "Souleric / content page. Film, edit, schedule posts. 90 mins.", cat: "cat-zynthverse", tag: "Content" },
+    { time: "1:00", label: "Lunch", desc: "Diet meal. Long break.", cat: "cat-personal", tag: "Fuel" },
+    { time: "2:30", label: "GYM", desc: "Saturday session. No rush.", cat: "cat-gym", tag: "💪 Gym" },
+    { time: "4:00", label: "Personal Time", desc: "Girlfriend, family, friends. Life outside the work.", cat: "cat-personal", tag: "Personal" },
+    { time: "7:00", label: "Dinner", desc: "Diet meal. Eat before meeting.", cat: "cat-personal", tag: "Fuel" },
+    { time: "8:00", label: "Graphitee Meeting", desc: "Saturday evening meeting. Show up sharp.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "10:00", label: "Wind Down", desc: "Meeting done. Decompress. Weekend night.", cat: "cat-rest", tag: "Rest" },
+    { time: "12:00", label: "Phone Out + Sleep", desc: "12AM max.", cat: "cat-sleep", tag: "Sleep" },
+  ],
+  6: [
+    { time: "7:00", label: "Wake Up", desc: "Rest day from gym. Let the body recover.", cat: "cat-wake", tag: "Reset" },
+    { time: "7:30", label: "Morning Walk — 5000 Steps", desc: "Active recovery. Easy pace.", cat: "cat-morning", tag: "Body" },
+    { time: "8:30", label: "Graphitee Presentation Prep", desc: "FIRST THING. Compile week, write article, prep recording. 90 mins.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "10:00", label: "Record Presentation", desc: "Film it. Submit it. Done.", cat: "cat-internship", tag: "Graphitee" },
+    { time: "11:00", label: "Cook + Eat + Rest", desc: "Proper Sunday morning. Slow down.", cat: "cat-personal", tag: "Fuel" },
+    { time: "1:00", label: "Zynthverse Planning", desc: "Next week tasks. Drop tracker. What needs to move. 60 mins.", cat: "cat-zynthverse", tag: "⚡ Zynthverse" },
+    { time: "2:30", label: "Complete Rest", desc: "Sunday afternoon is sacred. Recharge fully.", cat: "cat-rest", tag: "Rest" },
+    { time: "6:00", label: "Dinner + Cook Meal Prep", desc: "Prep some meals for the week if possible. Saves time on weekdays.", cat: "cat-personal", tag: "Fuel" },
+    { time: "8:00", label: "Week Prep", desc: "15 mins. Set Monday's micro-task for Zynthverse. Mental prep for the week.", cat: "cat-personal", tag: "Prep" },
+    { time: "9:00", label: "Wind Down", desc: "Early Sunday wind down = great Monday.", cat: "cat-rest", tag: "Rest" },
+    { time: "11:00", label: "Phone Out + Sleep", desc: "Earliest sleep of the week. Protect Monday.", cat: "cat-sleep", tag: "Sleep" },
+  ]
+};
+
+const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+let currentPhase = 0;
+let currentDays = [0, 0];
+
+function switchPhase(idx) {
+  currentPhase = idx;
+  document.querySelectorAll('.phase-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+  document.querySelectorAll('.phase-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  renderSchedule();
+}
+
+function switchDay(phase, dayIdx) {
+  currentDays[phase] = dayIdx;
+  const tabs = document.querySelectorAll(`#tabs${phase} .day-tab`);
+  tabs.forEach((t, i) => t.classList.toggle('active', i === dayIdx));
+  renderSchedule();
+}
+
+function renderSchedule() {
+  const phase = currentPhase;
+  const dayIdx = currentDays[phase];
+  const data = phase === 0 ? PHASE1 : PHASE2;
+  const blocks = data[dayIdx];
+  const container = document.getElementById(`schedule${phase}`);
+
+  container.innerHTML = `
+    <div style="margin-bottom:20px;padding:12px 16px;background:#111;border-left:3px solid #c8f135;font-size:12px;color:#888;letter-spacing:0.5px">
+      <span style="color:#c8f135;font-family:'Bebas Neue';font-size:16px;letter-spacing:2px">${DAY_NAMES[dayIdx]}</span>
+      ${dayIdx === 5 ? '<span style="margin-left:12px;font-size:10px;color:#ff4dff">★ Every 3rd Sat is college — adjust morning blocks accordingly</span>' : ''}
+    </div>
+    <div class="schedule">
+      ${blocks.map((b, i) => `
+        <div class="block ${b.cat}" style="animation-delay:${i * 0.04}s">
+          <div class="block-time">${b.time}</div>
+          <div class="block-dot"><div class="dot"></div></div>
+          <div class="block-content">
+            <div class="block-label">${b.label}</div>
+            <div class="block-desc">${b.desc}</div>
+            <span class="block-tag">${b.tag}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+renderSchedule();
+</script>
+</body>
+</html>

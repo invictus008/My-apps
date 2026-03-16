@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Audit – Zynthverse Mode</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Time Audit">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230a0a0a'/%3E%3Ctext y='72' x='50' text-anchor='middle' font-size='60' font-family='monospace' fill='%23c8f135'%3E⏱%3C/text%3E%3C/svg%3E">
+<script>
+  if ('serviceWorker' in navigator) {
+    const sw = `
+      self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+      self.addEventListener('install', e => e.waitUntil(caches.open('v1').then(c => c.addAll([location.pathname]))));
+    `;
+    const blob = new Blob([sw], {type: 'application/javascript'});
+    navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+  }
+  // Manifest
+  const manifest = {
+    name: "Time Audit – Zynthverse Mode",
+    short_name: "Time Audit",
+    start_url: ".",
+    display: "standalone",
+    background_color: "#0a0a0a",
+    theme_color: "#0a0a0a",
+    icons: [{
+      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230a0a0a'/%3E%3Ctext y='72' x='50' text-anchor='middle' font-size='60' font-family='monospace' fill='%23c8f135'%3E⏱%3C/text%3E%3C/svg%3E",
+      sizes: "192x192", type: "image/svg+xml"
+    }]
+  };
+  const mBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+  const mLink = document.createElement('link');
+  mLink.rel = 'manifest';
+  mLink.href = URL.createObjectURL(mBlob);
+  document.currentScript.after(mLink);
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #222222;
+    --accent: #c8f135;
+    --accent2: #ff4d4d;
+    --text: #f0f0f0;
+    --muted: #555;
+    --muted2: #333;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  header {
+    max-width: 640px;
+    margin: 0 auto 32px;
+  }
+
+  .tag {
+    display: inline-block;
+    background: var(--accent);
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 6vw, 42px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+    max-width: 480px;
+  }
+
+  .day-tabs {
+    display: flex;
+    gap: 8px;
+    max-width: 640px;
+    margin: 0 auto 24px;
+  }
+
+  .day-tab {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .day-tab:hover { border-color: var(--accent); color: var(--accent); }
+  .day-tab.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+  }
+
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .add-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .add-block-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .form-row.full { grid-template-columns: 1fr; }
+
+  label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--muted2);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+
+  select option { background: var(--surface2); }
+
+  textarea { resize: none; height: 60px; }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .cat-btn {
+    background: var(--surface2);
+    border: 1px solid var(--muted2);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 8px 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .cat-btn:hover { border-color: var(--accent); color: var(--text); }
+  .cat-btn.selected { border-color: var(--accent); color: #000; }
+
+  .cat-btn[data-cat="deep-work"].selected { background: var(--accent); }
+  .cat-btn[data-cat="internship"].selected { background: #4da6ff; border-color: #4da6ff; }
+  .cat-btn[data-cat="zynthverse"].selected { background: #ff4dff; border-color: #ff4dff; color: #fff; }
+  .cat-btn[data-cat="dance"].selected { background: #ff9a3c; border-color: #ff9a3c; }
+  .cat-btn[data-cat="personal"].selected { background: #3cffc8; border-color: #3cffc8; }
+  .cat-btn[data-cat="wasted"].selected { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+
+  .add-btn {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    margin-top: 6px;
+  }
+
+  .add-btn:hover { opacity: 0.85; }
+
+  .entries-section {
+    margin-top: 8px;
+  }
+
+  .entries-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .entries-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .total-badge {
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+
+  .entry-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .entry-card[data-cat="internship"] { border-left-color: #4da6ff; }
+  .entry-card[data-cat="zynthverse"] { border-left-color: #ff4dff; }
+  .entry-card[data-cat="dance"] { border-left-color: #ff9a3c; }
+  .entry-card[data-cat="personal"] { border-left-color: #3cffc8; }
+  .entry-card[data-cat="wasted"] { border-left-color: var(--accent2); }
+
+  .entry-left { flex: 1; }
+
+  .entry-activity {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .entry-meta {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .entry-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .entry-cat-tag {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border: 1px solid currentColor;
+    margin-top: 4px;
+  }
+
+  .entry-card[data-cat="deep-work"] .entry-cat-tag { color: var(--accent); }
+  .entry-card[data-cat="internship"] .entry-cat-tag { color: #4da6ff; }
+  .entry-card[data-cat="zynthverse"] .entry-cat-tag { color: #ff4dff; }
+  .entry-card[data-cat="dance"] .entry-cat-tag { color: #ff9a3c; }
+  .entry-card[data-cat="personal"] .entry-cat-tag { color: #3cffc8; }
+  .entry-card[data-cat="wasted"] .entry-cat-tag { color: var(--accent2); }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: var(--muted2);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 0 0 12px;
+    line-height: 1;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .delete-btn:hover { color: var(--accent2); }
+
+  .empty-state {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 32px 0;
+    border: 1px dashed var(--muted2);
+    letter-spacing: 1px;
+  }
+
+  .summary-section {
+    margin-top: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+  }
+
+  .summary-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .summary-bar-row {
+    margin-bottom: 12px;
+  }
+
+  .summary-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-bottom: 5px;
+  }
+
+  .summary-bar-name { color: var(--text); }
+  .summary-bar-time { color: var(--muted); }
+
+  .bar-track {
+    height: 6px;
+    background: var(--muted2);
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    transition: width 0.4s ease;
+  }
+
+  .bar-fill.deep-work { background: var(--accent); }
+  .bar-fill.internship { background: #4da6ff; }
+  .bar-fill.zynthverse { background: #ff4dff; }
+  .bar-fill.dance { background: #ff9a3c; }
+  .bar-fill.personal { background: #3cffc8; }
+  .bar-fill.wasted { background: var(--accent2); }
+
+  .insight-box {
+    margin-top: 16px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  .insight-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .insight-text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .insight-text strong { color: var(--accent); font-family: 'Syne', sans-serif; }
+
+  .clear-day-btn {
+    background: none;
+    border: 1px solid var(--muted2);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+
+  .clear-day-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .zyn-note {
+    max-width: 640px;
+    margin: 28px auto 0;
+    border: 1px solid #ff4dff33;
+    background: #ff4dff08;
+    padding: 14px 18px;
+    font-size: 12px;
+    color: #cc99ff;
+    line-height: 1.6;
+    letter-spacing: 0.3px;
+  }
+
+  .zyn-note strong { color: #ff4dff; font-family: 'Syne', sans-serif; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="tag">🔍 Time Audit</div>
+  <h1>WHERE DOES<br>YOUR DAY <span>ACTUALLY GO?</span></h1>
+  <p class="subtitle">Log every block of time for 3 days. Don't change your behavior — just track it. The data will show you the truth.</p>
+</header>
+
+<div class="day-tabs">
+  <button class="day-tab active" onclick="switchDay(0)">DAY 1</button>
+  <button class="day-tab" onclick="switchDay(1)">DAY 2</button>
+  <button class="day-tab" onclick="switchDay(2)">DAY 3</button>
+</div>
+
+<div class="container">
+
+  <div class="add-block">
+    <div class="add-block-title">+ Log a Time Block</div>
+
+    <div class="form-row">
+      <div>
+        <label>From</label>
+        <input type="time" id="timeFrom">
+      </div>
+      <div>
+        <label>To</label>
+        <input type="time" id="timeTo">
+      </div>
+    </div>
+
+    <div class="form-row full">
+      <div>
+        <label>What were you doing?</label>
+        <input type="text" id="activity" placeholder="e.g. Scrolled Instagram, Designed for Graphitee...">
+      </div>
+    </div>
+
+    <div style="margin-bottom:10px">
+      <label>Category</label>
+      <div class="category-grid">
+        <button class="cat-btn" data-cat="deep-work" onclick="selectCat(this)">🧠 Deep Work</button>
+        <button class="cat-btn" data-cat="internship" onclick="selectCat(this)">💼 Internship</button>
+        <button class="cat-btn" data-cat="zynthverse" onclick="selectCat(this)">⚡ Zynthverse</button>
+        <button class="cat-btn" data-cat="dance" onclick="selectCat(this)">🕺 Dance/Studio</button>
+        <button class="cat-btn" data-cat="personal" onclick="selectCat(this)">🌿 Personal</button>
+        <button class="cat-btn" data-cat="wasted" onclick="selectCat(this)">💀 Wasted</button>
+      </div>
+    </div>
+
+    <div class="form-row full">
+      <div>
+        <label>Note (optional)</label>
+        <textarea id="note" placeholder="Any context — was you tired? distracted? in the zone?"></textarea>
+      </div>
+    </div>
+
+    <button class="add-btn" onclick="addEntry()">LOG THIS BLOCK</button>
+  </div>
+
+  <div class="entries-section">
+    <div class="entries-header">
+      <div class="entries-title">Today's Log</div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="total-badge" id="totalHours">0h 0m logged</div>
+        <button class="clear-day-btn" onclick="clearDay()">clear day</button>
+      </div>
+    </div>
+    <div id="entriesList"></div>
+  </div>
+
+  <div class="summary-section" id="summarySection" style="display:none">
+    <div class="summary-title">Breakdown</div>
+    <div id="summaryBars"></div>
+    <div class="insight-box">
+      <div class="insight-label">↳ Pattern Detected</div>
+      <div class="insight-text" id="insightText"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="zyn-note">
+  <strong>Remember:</strong> This isn't about guilt. It's about finding the windows. Even 2 hours carved out for Zynthverse per day is 14 hours a week. The sleeve design gets done. The drop moves. The momentum comes back.
+</div>
+
+<script>
+  const CATS = {
+    "deep-work": { label: "Deep Work", color: "#c8f135" },
+    "internship": { label: "Internship", color: "#4da6ff" },
+    "zynthverse": { label: "Zynthverse", color: "#ff4dff" },
+    "dance": { label: "Dance/Studio", color: "#ff9a3c" },
+    "personal": { label: "Personal", color: "#3cffc8" },
+    "wasted": { label: "Wasted", color: "#ff4d4d" }
+  };
+
+  let currentDay = 0;
+  let selectedCat = null;
+  let data = JSON.parse(localStorage.getItem('timeAuditData') || 'null') || [[], [], []];
+
+  function switchDay(idx) {
+    currentDay = idx;
+    document.querySelectorAll('.day-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+    renderEntries();
+  }
+
+  function selectCat(btn) {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedCat = btn.dataset.cat;
+  }
+
+  function timeToMins(t) {
+    if (!t) return 0;
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  function minsToLabel(m) {
+    const h = Math.floor(m / 60);
+    const min = m % 60;
+    if (h === 0) return `${min}m`;
+    if (min === 0) return `${h}h`;
+    return `${h}h ${min}m`;
+  }
+
+  function addEntry() {
+    const from = document.getElementById('timeFrom').value;
+    const to = document.getElementById('timeTo').value;
+    const activity = document.getElementById('activity').value.trim();
+    const note = document.getElementById('note').value.trim();
+
+    if (!from || !to || !activity || !selectedCat) {
+      alert('Fill in time, activity, and pick a category!');
+      return;
+    }
+
+    const mins = timeToMins(to) - timeToMins(from);
+    if (mins <= 0) { alert('End time must be after start time!'); return; }
+
+    data[currentDay].push({ from, to, activity, cat: selectedCat, note, mins, id: Date.now() });
+    save();
+    renderEntries();
+
+    document.getElementById('timeFrom').value = to;
+    document.getElementById('timeTo').value = '';
+    document.getElementById('activity').value = '';
+    document.getElementById('note').value = '';
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+    selectedCat = null;
+  }
+
+  function deleteEntry(id) {
+    data[currentDay] = data[currentDay].filter(e => e.id !== id);
+    save();
+    renderEntries();
+  }
+
+  function clearDay() {
+    if (confirm('Clear all entries for this day?')) {
+      data[currentDay] = [];
+      save();
+      renderEntries();
+    }
+  }
+
+  function save() {
+    localStorage.setItem('timeAuditData', JSON.stringify(data));
+  }
+
+  function renderEntries() {
+    const list = document.getElementById('entriesList');
+    const entries = data[currentDay];
+
+    if (entries.length === 0) {
+      list.innerHTML = '<div class="empty-state">No entries yet — start logging your day</div>';
+      document.getElementById('summarySection').style.display = 'none';
+      document.getElementById('totalHours').textContent = '0h 0m logged';
+      return;
+    }
+
+    const totalMins = entries.reduce((s, e) => s + e.mins, 0);
+    document.getElementById('totalHours').textContent = minsToLabel(totalMins) + ' logged';
+
+    list.innerHTML = entries.map(e => `
+      <div class="entry-card" data-cat="${e.cat}">
+        <div class="entry-left">
+          <div class="entry-activity">${e.activity}</div>
+          <div class="entry-meta">
+            <span>${e.from} → ${e.to}</span>
+            <span>${minsToLabel(e.mins)}</span>
+          </div>
+          ${e.note ? `<div class="entry-note">${e.note}</div>` : ''}
+          <div><span class="entry-cat-tag">${CATS[e.cat].label}</span></div>
+        </div>
+        <button class="delete-btn" onclick="deleteEntry(${e.id})">✕</button>
+      </div>
+    `).join('');
+
+    renderSummary(entries, totalMins);
+  }
+
+  function renderSummary(entries, totalMins) {
+    const section = document.getElementById('summarySection');
+    section.style.display = 'block';
+
+    const catTotals = {};
+    entries.forEach(e => {
+      catTotals[e.cat] = (catTotals[e.cat] || 0) + e.mins;
+    });
+
+    const bars = document.getElementById('summaryBars');
+    bars.innerHTML = Object.entries(catTotals)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, mins]) => {
+        const pct = totalMins > 0 ? (mins / totalMins * 100).toFixed(1) : 0;
+        return `
+          <div class="summary-bar-row">
+            <div class="summary-bar-label">
+              <span class="summary-bar-name">${CATS[cat].label}</span>
+              <span class="summary-bar-time">${minsToLabel(mins)} · ${pct}%</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill ${cat}" style="width:${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    const wastedMins = catTotals['wasted'] || 0;
+    const zynMins = catTotals['zynthverse'] || 0;
+    const insight = document.getElementById('insightText');
+
+    if (totalMins < 120) {
+      insight.innerHTML = `Keep logging — you need more data to see the full picture. <strong>Every block counts.</strong>`;
+    } else if (zynMins === 0 && wastedMins > 60) {
+      insight.innerHTML = `You have <strong>${minsToLabel(wastedMins)}</strong> of wasted time today — and <strong>zero minutes on Zynthverse.</strong> That's not a time problem. That's a prioritization problem. You have the window.`;
+    } else if (zynMins === 0) {
+      insight.innerHTML = `No Zynthverse time today yet. Find even <strong>one 45-minute window</strong> — that's all it takes to push the sleeve design forward.`;
+    } else if (zynMins > 0 && zynMins < 60) {
+      insight.innerHTML = `<strong>${minsToLabel(zynMins)} on Zynthverse</strong> — it's a start. Push for 90+ minutes tomorrow. Small wins compound.`;
+    } else {
+      insight.innerHTML = `<strong>${minsToLabel(zynMins)} on Zynthverse.</strong> That's what momentum looks like. Keep this up for 5 days and the drop moves.`;
+    }
+  }
+
+  renderEntries();
+</script>
+</body>
+</html>

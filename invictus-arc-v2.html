@@ -136,6 +136,37 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .home-greeting{font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--white3);text-transform:uppercase;margin-bottom:4px;}
 .home-title{font-family:'UnifrakturMaguntia',cursive;font-size:42px;color:var(--crimson3);text-shadow:0 0 30px var(--crimson)44;line-height:1;}
 .home-date{font-size:10px;color:var(--white3);letter-spacing:2px;margin-top:4px;}
+
+/* TIMETABLE CHECKLIST */
+.tl-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--crimson);padding:10px 12px;margin-bottom:5px;display:flex;align-items:center;gap:9px;}
+.tl-item.done{opacity:0.4;border-left-color:var(--white3);}
+.tl-check{width:16px;height:16px;border:1px solid var(--border2);background:#000;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all 0.15s;}
+.tl-check.done{background:var(--crimson);border-color:var(--crimson2);}
+.tl-body{flex:1;}
+.tl-time{font-size:9px;color:var(--crimson2);letter-spacing:1px;font-family:'Cinzel',serif;margin-bottom:2px;}
+.tl-name{font-family:'MedievalSharp',serif;font-size:12px;color:var(--white);line-height:1.3;}
+.tl-name.done{text-decoration:line-through;color:var(--white3);}
+.tl-cat{font-size:8px;color:var(--white3);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+.tl-xp{font-size:8px;color:var(--crimson2);margin-left:auto;font-family:'Cinzel',serif;white-space:nowrap;flex-shrink:0;}
+/* CALENDAR */
+.cal-wrap{background:var(--surface);border:1px solid var(--border);padding:14px;margin-bottom:10px;}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.cal-month{font-family:'Cinzel Decorative',serif;font-size:12px;letter-spacing:2px;color:var(--crimson2);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-day-label{font-family:'Cinzel',serif;font-size:8px;text-align:center;color:var(--white3);padding:3px 0;letter-spacing:0.5px;}
+.cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;color:var(--white2);cursor:pointer;position:relative;font-family:'Cinzel',serif;}
+.cal-day.today{color:var(--crimson3);font-weight:700;}
+.cal-day.empty{opacity:0;}
+.cal-dot{width:5px;height:5px;border-radius:50%;margin-top:2px;}
+.cal-dot.full{background:#22c55e;}
+.cal-dot.partial{background:var(--gold2);}
+.cal-dot.none{background:var(--crimson);}
+.cal-dot.future{display:none;}
+.cal-progress-wrap{margin-top:10px;}
+.cal-progress-label{display:flex;justify-content:space-between;font-size:9px;color:var(--white3);margin-bottom:4px;font-family:'Cinzel',serif;letter-spacing:1px;}
+.cal-progress-bar{height:4px;background:var(--surface2);}
+.cal-progress-fill{height:100%;background:linear-gradient(90deg,var(--crimson),var(--crimson3));transition:width 0.5s;}
+
 .home-wolf{font-size:28px;display:block;margin:4px 0;filter:drop-shadow(0 0 8px var(--crimson));}
 
 /* DAILY QUESTS AUTO */
@@ -392,7 +423,21 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
   </div>
 
   <!-- SHORTCUTS -->
-  <div class="orn-div"><span class="orn-div-inner">⚔ Quick Access ⚔</span></div>
+    <!-- TIMETABLE CHECKLIST -->
+  <div class="orn-div"><span class="orn-div-inner">⚔ Today's Schedule ⚔</span></div>
+  <div id="home-tl-list"></div>
+  <div id="tl-progress-wrap" style="margin-bottom:12px;display:none">
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--white3);margin-bottom:4px;font-family:'Cinzel',serif;letter-spacing:1px;">
+      <span>SCHEDULE PROGRESS</span><span id="tl-pct">0%</span>
+    </div>
+    <div class="cal-progress-bar"><div class="cal-progress-fill" id="tl-track-fill" style="width:0%"></div></div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="orn-div"><span class="orn-div-inner">⚔ Chronicle ⚔</span></div>
+  <div class="cal-wrap" id="home-calendar"></div>
+
+   <div class="orn-div"><span class="orn-div-inner">⚔ Quick Access ⚔</span></div>
   <div class="shortcuts">
     <div class="shortcut" onclick="navTo('quests')"><span class="shortcut-icon">📜</span><span class="shortcut-label">Quests</span></div>
     <div class="shortcut" onclick="navTo('brain')"><span class="shortcut-icon">🧠</span><span class="shortcut-label">Scrolls</span></div>
@@ -475,7 +520,9 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
     <button class="bn-tab" onclick="switchBrain('notes',this)">Notes</button>
     <button class="bn-tab" onclick="switchBrain('inbox',this)">Inbox</button>
     <button class="bn-tab" onclick="switchBrain('journal',this)">Journal</button>
-  </div>
+    <button class="bn-tab" onclick="switchBrain('calendar',this)">Calendar</button>
+
+ </div>
 
   <!-- AREAS -->
   <div class="bp active" id="bp-areas">
@@ -543,6 +590,15 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
       </div>
     </div>
     <div id="journal-list"></div>
+  </div>
+
+  <!-- CALENDAR TAB -->
+  <div class="bp" id="bp-calendar">
+    <div class="cal-wrap" id="brain-calendar"></div>
+    <div style="margin-top:12px">
+      <div class="orn-div"><span class="orn-div-inner">Today's Schedule</span></div>
+      <div id="brain-tl-list"></div>
+    </div>
   </div>
 </div>
 
@@ -821,7 +877,273 @@ document.getElementById('char-img').src='data:image/jpeg;base64,/9j/4AAQSkZJRgAB
 // ════════════════════════════════
 // DATE
 // ════════════════════════════════
-function updateDate(){
+// ════════════════════════════════
+// TIMETABLE DATA
+// ════════════════════════════════
+const PHASE1_SCHEDULE = {
+  0:[// MON
+    {time:'5:00',name:'Wake Up — No Phone 10 mins',cat:'Personal',xpStat:5,xp:10},
+    {time:'5:10',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'6:00',name:'Get Ready + Breakfast',cat:'Personal',xpStat:5,xp:5},
+    {time:'7:30',name:'Leave for College',cat:'Study',xpStat:5,xp:5},
+    {time:'8:00',name:'College',cat:'Study',xpStat:5,xp:20},
+    {time:'4:00',name:'Zynthverse Block',cat:'Zynthverse',xpStat:1,xp:25},
+    {time:'5:30',name:'Graphitee — 2 Designs',cat:'Skills',xpStat:5,xp:20},
+    {time:'8:00',name:'Learning Block — German + Reading',cat:'German',xpStat:2,xp:15},
+    {time:'11:30',name:'Phone Out of Room',cat:'Personal',xpStat:5,xp:10},
+  ],
+  1:[// TUE
+    {time:'5:00',name:'Wake Up — No Phone 10 mins',cat:'Personal',xpStat:5,xp:10},
+    {time:'5:10',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'6:00',name:'Get Ready + Breakfast',cat:'Personal',xpStat:5,xp:5},
+    {time:'8:00',name:'College',cat:'Study',xpStat:5,xp:20},
+    {time:'4:00',name:'Zynthverse Block',cat:'Zynthverse',xpStat:1,xp:25},
+    {time:'5:30',name:'Graphitee — 2 Designs',cat:'Skills',xpStat:5,xp:20},
+    {time:'8:00',name:'Learning Block — German + Reading',cat:'German',xpStat:2,xp:15},
+    {time:'11:30',name:'Phone Out of Room',cat:'Personal',xpStat:5,xp:10},
+  ],
+  2:[// WED
+    {time:'5:00',name:'Wake Up — No Phone 10 mins',cat:'Personal',xpStat:5,xp:10},
+    {time:'5:10',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'6:00',name:'Get Ready + Breakfast',cat:'Personal',xpStat:5,xp:5},
+    {time:'8:00',name:'College',cat:'Study',xpStat:5,xp:20},
+    {time:'4:00',name:'Graphitee — 2 Designs',cat:'Skills',xpStat:5,xp:20},
+    {time:'5:15',name:'Zynthverse — Quick Block',cat:'Zynthverse',xpStat:1,xp:15},
+    {time:'6:00',name:'Dance Class — Nesan Studio',cat:'Dance',xpStat:3,xp:25},
+    {time:'8:00',name:'Graphitee Meeting',cat:'Skills',xpStat:5,xp:10},
+    {time:'11:30',name:'Phone Out of Room',cat:'Personal',xpStat:5,xp:10},
+  ],
+  3:[// THU
+    {time:'5:00',name:'Wake Up — No Phone 10 mins',cat:'Personal',xpStat:5,xp:10},
+    {time:'5:10',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'6:00',name:'Get Ready + Breakfast',cat:'Personal',xpStat:5,xp:5},
+    {time:'8:00',name:'College',cat:'Study',xpStat:5,xp:20},
+    {time:'4:00',name:'Zynthverse Block',cat:'Zynthverse',xpStat:1,xp:25},
+    {time:'5:00',name:'Graphitee — 2 Designs',cat:'Skills',xpStat:5,xp:20},
+    {time:'6:00',name:'Dance Class — Nesan Studio',cat:'Dance',xpStat:3,xp:25},
+    {time:'8:00',name:'Learning Block — German + Reading',cat:'German',xpStat:2,xp:15},
+    {time:'11:30',name:'Phone Out of Room',cat:'Personal',xpStat:5,xp:10},
+  ],
+  4:[// FRI
+    {time:'5:00',name:'Wake Up — No Phone 10 mins',cat:'Personal',xpStat:5,xp:10},
+    {time:'5:10',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'6:00',name:'Get Ready + Breakfast',cat:'Personal',xpStat:5,xp:5},
+    {time:'8:00',name:'College',cat:'Study',xpStat:5,xp:20},
+    {time:'4:15',name:'Zynthverse — Weekly Review',cat:'Zynthverse',xpStat:1,xp:25},
+    {time:'5:30',name:'Graphitee — 2 Designs',cat:'Skills',xpStat:5,xp:20},
+    {time:'7:00',name:'Free Evening',cat:'Personal',xpStat:5,xp:5},
+    {time:'11:30',name:'Phone Out of Room',cat:'Personal',xpStat:5,xp:10},
+  ],
+  5:[// SAT
+    {time:'6:00',name:'Wake Up',cat:'Personal',xpStat:5,xp:5},
+    {time:'6:15',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'8:00',name:'DEEP Zynthverse Session',cat:'Zynthverse',xpStat:1,xp:40},
+    {time:'11:30',name:'Graphitee Designs',cat:'Skills',xpStat:5,xp:20},
+    {time:'3:00',name:'Content Creation — Souleric',cat:'Zynthverse',xpStat:1,xp:20},
+    {time:'8:00',name:'Graphitee Meeting',cat:'Skills',xpStat:5,xp:10},
+    {time:'12:00',name:'Phone Out + Sleep',cat:'Personal',xpStat:5,xp:10},
+  ],
+  6:[// SUN
+    {time:'7:00',name:'Wake Up',cat:'Personal',xpStat:5,xp:5},
+    {time:'7:30',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'8:30',name:'Graphitee Presentation Prep',cat:'Skills',xpStat:5,xp:20},
+    {time:'10:00',name:'Record Presentation',cat:'Skills',xpStat:5,xp:15},
+    {time:'2:00',name:'Zynthverse Planning Session',cat:'Zynthverse',xpStat:1,xp:20},
+    {time:'8:00',name:'Week Prep — Set Monday Task',cat:'Personal',xpStat:5,xp:10},
+    {time:'11:00',name:'Phone Out + Early Sleep',cat:'Personal',xpStat:5,xp:15},
+  ],
+};
+
+const PHASE2_SCHEDULE = {
+  0:[
+    {time:'5:00',name:'Wake Up + Cold Shower',cat:'Body',xpStat:0,xp:15},
+    {time:'5:15',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'6:00',name:'Cook + Eat Breakfast',cat:'Personal',xpStat:5,xp:5},
+    {time:'8:00',name:'College',cat:'Study',xpStat:5,xp:20},
+    {time:'4:00',name:'GYM',cat:'Body',xpStat:0,xp:30},
+    {time:'5:15',name:'Zynthverse Block',cat:'Zynthverse',xpStat:1,xp:25},
+    {time:'6:45',name:'Graphitee — 2 Designs',cat:'Skills',xpStat:5,xp:20},
+    {time:'8:00',name:'Graphitee Meeting',cat:'Skills',xpStat:5,xp:10},
+    {time:'11:30',name:'Phone Out + Sleep',cat:'Personal',xpStat:5,xp:10},
+  ],
+  1:[
+    {time:'5:00',name:'Wake Up + Cold Shower',cat:'Body',xpStat:0,xp:15},
+    {time:'5:15',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'6:00',name:'Cook + Eat Breakfast',cat:'Personal',xpStat:5,xp:5},
+    {time:'8:00',name:'College',cat:'Study',xpStat:5,xp:20},
+    {time:'4:00',name:'GYM',cat:'Body',xpStat:0,xp:30},
+    {time:'5:15',name:'Zynthverse Block',cat:'Zynthverse',xpStat:1,xp:25},
+    {time:'6:45',name:'Graphitee — 2 Designs',cat:'Skills',xpStat:5,xp:20},
+    {time:'8:00',name:'Learning Block — German + Reading',cat:'German',xpStat:2,xp:15},
+    {time:'11:30',name:'Phone Out + Sleep',cat:'Personal',xpStat:5,xp:10},
+  ],
+  2:[
+    {time:'5:00',name:'Wake Up + Cold Shower',cat:'Body',xpStat:0,xp:15},
+    {time:'5:15',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'6:00',name:'Cook + Eat Breakfast',cat:'Personal',xpStat:5,xp:5},
+    {time:'8:00',name:'College',cat:'Study',xpStat:5,xp:20},
+    {time:'4:00',name:'GYM',cat:'Body',xpStat:0,xp:30},
+    {time:'5:00',name:'Graphitee — 2 Designs',cat:'Skills',xpStat:5,xp:20},
+    {time:'6:00',name:'Dance Class — Nesan Studio',cat:'Dance',xpStat:3,xp:25},
+    {time:'8:00',name:'Graphitee Meeting',cat:'Skills',xpStat:5,xp:10},
+    {time:'11:30',name:'Phone Out + Sleep',cat:'Personal',xpStat:5,xp:10},
+  ],
+  3:[
+    {time:'5:00',name:'Wake Up + Cold Shower',cat:'Body',xpStat:0,xp:15},
+    {time:'5:15',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'6:00',name:'Cook + Eat Breakfast',cat:'Personal',xpStat:5,xp:5},
+    {time:'8:00',name:'College',cat:'Study',xpStat:5,xp:20},
+    {time:'4:00',name:'GYM',cat:'Body',xpStat:0,xp:30},
+    {time:'5:00',name:'Zynthverse Block',cat:'Zynthverse',xpStat:1,xp:25},
+    {time:'6:00',name:'Dance Class — Nesan Studio',cat:'Dance',xpStat:3,xp:25},
+    {time:'8:00',name:'Graphitee Designs + Learning',cat:'Skills',xpStat:5,xp:20},
+    {time:'11:30',name:'Phone Out + Sleep',cat:'Personal',xpStat:5,xp:10},
+  ],
+  4:[
+    {time:'5:00',name:'Wake Up + Cold Shower',cat:'Body',xpStat:0,xp:15},
+    {time:'5:15',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'6:00',name:'Cook + Eat Breakfast',cat:'Personal',xpStat:5,xp:5},
+    {time:'8:00',name:'College',cat:'Study',xpStat:5,xp:20},
+    {time:'4:00',name:'GYM',cat:'Body',xpStat:0,xp:30},
+    {time:'5:15',name:'Zynthverse Weekly Review',cat:'Zynthverse',xpStat:1,xp:25},
+    {time:'6:30',name:'Graphitee — 2 Designs',cat:'Skills',xpStat:5,xp:20},
+    {time:'8:00',name:'Graphitee Meeting',cat:'Skills',xpStat:5,xp:10},
+    {time:'11:30',name:'Phone Out + Sleep',cat:'Personal',xpStat:5,xp:10},
+  ],
+  5:[
+    {time:'6:00',name:'Wake Up + Cold Shower',cat:'Body',xpStat:0,xp:15},
+    {time:'6:15',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'8:00',name:'DEEP Zynthverse Session',cat:'Zynthverse',xpStat:1,xp:40},
+    {time:'11:30',name:'Content Creation — Souleric',cat:'Zynthverse',xpStat:1,xp:20},
+    {time:'2:30',name:'GYM',cat:'Body',xpStat:0,xp:30},
+    {time:'8:00',name:'Graphitee Meeting',cat:'Skills',xpStat:5,xp:10},
+    {time:'12:00',name:'Phone Out + Sleep',cat:'Personal',xpStat:5,xp:10},
+  ],
+  6:[
+    {time:'7:00',name:'Wake Up',cat:'Personal',xpStat:5,xp:5},
+    {time:'7:30',name:'Morning Walk — 5000 Steps',cat:'Body',xpStat:0,xp:15},
+    {time:'8:30',name:'Graphitee Presentation Prep',cat:'Skills',xpStat:5,xp:20},
+    {time:'10:00',name:'Record Presentation',cat:'Skills',xpStat:5,xp:15},
+    {time:'1:00',name:'Zynthverse Planning',cat:'Zynthverse',xpStat:1,xp:20},
+    {time:'6:00',name:'Dinner + Cook Meal Prep',cat:'Personal',xpStat:5,xp:5},
+    {time:'11:00',name:'Phone Out + Early Sleep',cat:'Personal',xpStat:5,xp:15},
+  ],
+};
+
+function getTodaySchedule(){
+  const now=new Date();
+  const isPhase2=now>=new Date('2026-04-01');
+  const schedule=isPhase2?PHASE2_SCHEDULE:PHASE1_SCHEDULE;
+  return schedule[now.getDay()===0?6:now.getDay()-1];
+}
+
+function getTLKey(dayOffset=0){
+  const d=new Date();
+  d.setDate(d.getDate()+dayOffset);
+  return `tl_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
+}
+
+function getTLStatus(){
+  return load(getTLKey(),{});
+}
+
+function toggleTL(idx){
+  const key=getTLKey();
+  const status=load(key,{});
+  const sched=getTodaySchedule();
+  const item=sched[idx];
+  const wasDone=!!status[idx];
+  status[idx]=!wasDone;
+  save(key,status);
+  if(!wasDone){
+    stats[item.xpStat].xp=Math.min(100,stats[item.xpStat].xp+item.xp);
+    save('iv2_stats',stats);
+    showToast(`+${item.xp} XP → ${stats[item.xpStat].name}`);
+  }
+  renderTL('home-tl-list');
+  renderTL('brain-tl-list');
+  renderCalendar('home-calendar');
+  renderCalendar('brain-calendar');
+}
+
+function renderTL(elId){
+  const el=document.getElementById(elId);
+  if(!el) return;
+  const sched=getTodaySchedule();
+  const status=getTLStatus();
+  if(!sched||!sched.length){el.innerHTML='<div class="empty">No schedule for today.</div>';return;}
+
+  const wrap=document.getElementById('tl-progress-wrap');
+  if(wrap){
+    wrap.style.display='block';
+    const done=Object.values(status).filter(Boolean).length;
+    const pct=Math.round(done/sched.length*100);
+    document.getElementById('tl-pct').textContent=pct+'%';
+    document.getElementById('tl-track-fill').style.width=pct+'%';
+  }
+
+  el.innerHTML=sched.map((item,i)=>`
+    <div class="tl-item ${status[i]?'done':''}">
+      <div class="tl-check ${status[i]?'done':''}" onclick="toggleTL(${i})">${status[i]?'✓':''}</div>
+      <div class="tl-body">
+        <div class="tl-time">${item.time}</div>
+        <div class="tl-name ${status[i]?'done':''}">${item.name}</div>
+        <div class="tl-cat">${item.cat}</div>
+      </div>
+      <span class="tl-xp">+${item.xp}XP</span>
+    </div>`).join('');
+}
+
+function renderCalendar(elId){
+  const el=document.getElementById(elId);
+  if(!el) return;
+  const now=new Date();
+  const year=now.getFullYear();
+  const month=now.getMonth();
+  const today=now.getDate();
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dayLabels=['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  // Calculate completion for each day
+  function getDayDot(d){
+    if(d>today) return 'future';
+    const key=`tl_${year}_${month}_${d}`;
+    const status=load(key,{});
+    const dateObj=new Date(year,month,d);
+    const dayIdx=dateObj.getDay()===0?6:dateObj.getDay()-1;
+    const isPhase2=dateObj>=new Date('2026-04-01');
+    const sched=(isPhase2?PHASE2_SCHEDULE:PHASE1_SCHEDULE)[dayIdx]||[];
+    if(!sched.length) return 'future';
+    const done=Object.values(status).filter(Boolean).length;
+    const total=sched.length;
+    if(done===0) return d===today?'none':'none';
+    if(done>=total*0.8) return 'full';
+    if(done>=total*0.4) return 'partial';
+    return 'none';
+  }
+
+  const startBlank=firstDay;
+  let cells='';
+  for(let i=0;i<startBlank;i++) cells+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const dot=getDayDot(d);
+    cells+=`<div class="cal-day ${d===today?'today':''}">${d}<div class="cal-dot ${dot}"></div></div>`;
+  }
+
+  el.innerHTML=`
+    <div class="cal-header">
+      <div class="cal-month">${months[month]} ${year}</div>
+      <span style="font-size:9px;color:var(--white3);font-family:'Cinzel',serif;letter-spacing:1px">🟢 Full &nbsp; 🟡 Partial &nbsp; 🔴 Missed</span>
+    </div>
+    <div class="cal-grid">
+      ${dayLabels.map(l=>`<div class="cal-day-label">${l}</div>`).join('')}
+      ${cells}
+    </div>`;
+}
+
+   function updateDate(){
   const d=new Date();
   const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -859,7 +1181,9 @@ function toggleDQ(idx){
 
 function renderHome(){
   generateDailyQuests();
-  const list=document.getElementById('home-dq-list');
+    renderTL('home-tl-list');
+  renderCalendar('home-calendar');
+   const list=document.getElementById('home-dq-list');
   const wrap=document.getElementById('dq-progress-wrap');
 
   if(!dailyQuests||!dailyQuests.quests.length){list.innerHTML='<div class="empty">No daily quests generated.</div>';return;}
@@ -1367,6 +1691,10 @@ function showToast(msg){
 // INIT
 // ════════════════════════════════
 renderHome();
+renderTL('home-tl-list');
+renderTL('brain-tl-list');
+renderCalendar('home-calendar');
+renderCalendar('brain-calendar');
 renderQuests();
 renderBrain();
 renderRaids();
